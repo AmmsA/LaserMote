@@ -1,7 +1,8 @@
-import numpy as np
+from Point import Point
 import matplotlib.pyplot as plt
 import cv2
 import sys
+import math
 
 
 def imshow(img):
@@ -19,20 +20,23 @@ def imshow(img):
 
 class LaserMote(object):
     def __init__(self,
-                 debug = False,
+                 debug=False,
                  min_hue=25, max_hue=180,
                  min_sat=100, max_sat=255,
-                 min_val=170, max_val=255):
+                 min_val=170, max_val=255,
+                 min_area=5, max_area=100,
+                 distance_threshold=25):
 
         """
         :param min_hue: minimum hue allowed
-        :param max_hea: maximum hue allowed
+        :param max_hue: maximum hue allowed
         :param min_sat: minimum saturation allowed
         :param max_sat: maximum saturation allowed
         :param min_val: minimum value allowed
         :param max_val: maximum value allowed
-        :param width:
-        :param height:
+        :param min_area: minimum area of the laser dot to look for
+        :param max_area: maximum area of the laser dot to look for
+        :param distance_threshold: threshold of the distance between current point location and the last seen point location
         :return:
         """
 
@@ -43,12 +47,28 @@ class LaserMote(object):
         self.min_val = min_val
         self.max_val = max_val
 
+        self.min_area = min_area
+        self.max_area = max_area
+
         self.camera = None
 
         self.debug = debug
 
         self.background = None
         self.blacked = None
+
+        self.point = Point()
+        self.point.setName('PointThread')
+        self.point.daemon = True  # make deamon thread to terminate when main program ends
+        self.point.start()
+
+        self.distance_threshold = distance_threshold
+
+    # computes distance between last_seen point (x, y) and the input's (x,y)
+    def get_distance(self, x2, y2):
+        x1, y1 = self.point.get_last_seen_coordinates()
+        dist = math.sqrt(math.pow(x2 - x1, 2) + math.pow(y2 - y1, 2))
+        return dist
 
     def setup_capture(self):
         # capture at location 0
@@ -92,17 +112,36 @@ class LaserMote(object):
         for cnt in contours:
             area = cv2.contourArea(cnt)
             M = cv2.moments(cnt)
-            if (area > 5 and area < 100):
+            # check if the contour is withing the area threshold
+            if self.min_area < area < self.max_area:
                 cx = int(M['m10'] / M['m00'])
                 cy = int(M['m01'] / M['m00'])
-                cv2.drawContours(frame, cnt, -1, (0, 0, 255), 5)
 
-                cv2.putText(
-                    frame, str(area), (cx, cy), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                # if self.debug:
+                #     print "within threshold " + str(area)
 
-                if self.debug:
-                    pass
-                    #print "within threshold " + str(area)
+                if self.point.was_seen() \
+                        and self.get_distance(cx, cy) <= self.distance_threshold:
+
+                    if self.debug:
+                        print '[DEBUG] Distance between last seen point (' + str(self.point.last_seen_x) + "," + str(
+                            self.point.last_seen_y) + ") and current point (" + str(cx) + "," + str(cy) + ") :" + str(
+                            self.get_distance(cx, cy))
+
+                    # update last point locations
+                    self.point.update_last_seen_position(cx, cy)
+                    self.point.set_on()
+                    cv2.drawContours(frame, cnt, -1, (0, 0, 255), 5)
+                    cv2.putText(
+                        frame, str(area), (cx, cy), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+
+                elif not self.point.was_seen():
+                    self.point.set_on()
+                    self.point.update_last_seen_position(cx, cy)
+                    if self.debug:
+                        print '[DEBUG] First seen point is at: (' + str(cx) + "," + str(cy) + ")"
+                        print '[DEBUG] Updated last seen coordinates'
+                break  # only one contour
 
         return frame
 
@@ -117,7 +156,7 @@ class LaserMote(object):
             w, h = frame.shape[:2]
 
             # mirror the frame
-            frame = cv2.flip(frame, 1)
+            # frame = cv2.flip(frame, 1)
 
             mask = None
             # wait for space to be clicked to capture background
@@ -125,7 +164,7 @@ class LaserMote(object):
                 print 'background captured'
                 self.background = frame
                 # clean up noise by adding median blur
-                cv2.medianBlur(self.background,5, self.background)
+                cv2.medianBlur(self.background, 5, self.background)
 
                 self.blacked = cv2.bitwise_and(frame, frame, mask=mask)
 
@@ -141,8 +180,8 @@ class LaserMote(object):
                 #
                 # mask = cv2.bitwise_not(mask, mask)
                 gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-                grayb = cv2.cvtColor(self.background, cv2.COLOR_BGR2GRAY)
-                diff_image = cv2.absdiff(gray, grayb)
+                gray_background = cv2.cvtColor(self.background, cv2.COLOR_BGR2GRAY)
+                diff_image = cv2.absdiff(gray, gray_background)
                 cv2.threshold(diff_image, 20, 255, cv2.THRESH_BINARY, diff_image)
 
                 element = cv2.getStructuringElement(cv2.MORPH_RECT, (1, 1))
@@ -167,9 +206,9 @@ class LaserMote(object):
             cv2.imshow('result', res)
 
             # wait for space to save single frame
-            if cv2.waitKey(5) == 32:
-                singleFrame = frame
-                # imshow(singleFrame)
+            # if cv2.waitKey(5) == 32:
+            #     singleFrame = frame
+            #     imshow(singleFrame)
 
             # exit on ESC press
             if cv2.waitKey(5) == 27:
@@ -180,5 +219,5 @@ class LaserMote(object):
 
 
 if __name__ == '__main__':
-    LaserMote = LaserMote(min_hue=20, max_hue=160, debug=True)
+    LaserMote = LaserMote(min_hue=20, max_hue=160, debug=False)
     LaserMote.run()
