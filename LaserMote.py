@@ -18,8 +18,18 @@ def imshow(img):
 
     plt.show()
 
+    # Defined colors
+
+
+RED = (0, 0, 255)
+GREEN = (0, 255, 0)
+BLUE = (255, 0, 0)
+WHITE = (255, 255, 255)
 
 class LaserMote(object):
+    NOT_FOUND_TEXT = "Laser pointer is not detected."
+    BOTTOM_LEFT_COORD = (25, 460)
+
     def __init__(self,
                  debug=False,
                  min_hue=25, max_hue=179,
@@ -97,6 +107,9 @@ class LaserMote(object):
 
         return self.camera
 
+    def debug_text(self, cx, cy, area):
+        return "Laser point detected at ({cx},{cy}) with area {area}.".format(cx=cx, cy=cy, area=area)
+
     # tracking method 1
     def in_laser_color_range(self, frame):
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
@@ -143,7 +156,7 @@ class LaserMote(object):
         contours, hierarchy = cv2.findContours(
             laser, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
-        foundValidPoint = False
+        found_valid_point = False
         for cnt in contours:
             area = cv2.contourArea(cnt)
             M = cv2.moments(cnt)
@@ -166,22 +179,31 @@ class LaserMote(object):
                     # update last point locations
                     self.point.update_last_seen_position(cx, cy)
                     self.point.set_on()
-                    cv2.drawContours(frame, cnt, -1, (0, 0, 255), 5)
+
+                    # cv2.drawContours(frame, cnt, -1, GREEN, 5) # draws the contour
+                    cv2.circle(frame, (cx, cy), 1, GREEN, thickness=4, lineType=8, shift=0)  # circle cnt center
+
                     cv2.putText(
-                        frame, str(area), (cx, cy), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                        frame,
+                        self.debug_text(cx, cy, area), LaserMote.BOTTOM_LEFT_COORD,
+                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
 
                 elif not self.point.was_seen():
                     self.point.set_on()
                     self.point.update_last_seen_position(cx, cy)
                     if self.debug:
-                        print '[DEBUG] First seen point is at: (' + str(cx) + "," + str(cy) + ")"
-                        print '[DEBUG] Updated last seen coordinates'
+                        print '[DEBUG] First seen point is at: (' + str(cx) + "," + str(cy) + ")."
+                        print '[DEBUG] Updated last seen coordinates.'
 
-                foundValidPoint = True
+                found_valid_point = True
                 break  # only one contour
 
-        if (not foundValidPoint) and self.point.is_on() and self.point.was_seen():
-            self.point.set_off()
+        if not found_valid_point:
+            cv2.putText(frame, LaserMote.NOT_FOUND_TEXT,
+                        LaserMote.BOTTOM_LEFT_COORD, cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
+
+            if self.point.is_on() and self.point.was_seen():
+                self.point.set_off()
 
         return frame
 
