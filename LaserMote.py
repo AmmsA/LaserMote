@@ -6,8 +6,13 @@ import math
 import numpy as np
 
 
-def imshow(img):
-    # hide the x and y axis for images
+def image_show(img):
+    """
+    Shows the image in matplotlib window
+
+    :param img: image to show
+    :rtype : void
+    """
     plt.axis('off')
     # RGB images are actually BGR in OpenCV, so convert before displaying
     if len(img.shape) == 3:
@@ -18,29 +23,30 @@ def imshow(img):
 
     plt.show()
 
-    # Defined colors
 
-
+# Defined colors
 RED = (0, 0, 255)
 GREEN = (0, 255, 0)
 BLUE = (255, 0, 0)
 WHITE = (255, 255, 255)
+
 
 class LaserMote(object):
     NOT_FOUND_TEXT = "Laser pointer is not detected."
     BOTTOM_LEFT_COORD = (25, 460)
 
     def __init__(self,
-                 debug=False,
                  min_hue=25, max_hue=179,
                  min_sat=100, max_sat=255,
                  min_val=200, max_val=255,
                  min_area=2, max_area=300,
                  reset_time=None, wait_time=5,
                  distance_threshold=25,
-                 tracking_method=1):
+                 tracking_method=1,
+                 debug=False, ):
 
         """
+        Initializes all needed variables
         :param min_hue: minimum hue allowed
         :param max_hue: maximum hue allowed
         :param min_sat: minimum saturation allowed
@@ -51,9 +57,10 @@ class LaserMote(object):
         :param max_area: maximum area of the laser dot to look for
         :param reset_time: time threshold to reset the last seen laser dot if not seen
         :param wait_time: the wait time to execute an action "turn on tv, print something, etc"
-        :param distance_threshold: threshold of the distance between current point location and the last seen point location
+        :param distance_threshold: threshold of the distance between current point location and last seen point location
         :param tracking_method: which tracking method to use
-        :return:
+        :param debug: boolean to allow/disallow debug printing and extra windows
+        :rtype : LaserMote object
         """
 
         self.min_hue = min_hue
@@ -94,24 +101,47 @@ class LaserMote(object):
 
     # computes distance between last_seen point (x, y) and the input's (x,y)
     def get_distance(self, x2, y2):
-        x1, y1 = self.point.get_last_seen_coordinates()
+        """
+        Calculates the Euclidean distance between the given point (x2,y2) and last seen point.
+        :param x2: x axis value
+        :param y2: y axis value
+        :return: the Euclidean distance between the given point (x2,y2) and last seen point
+        :rtype : double
+        """
+        x1, y1 = self.point.get_last_seen_coordinates
         dist = math.sqrt(math.pow(x2 - x1, 2) + math.pow(y2 - y1, 2))
         return dist
 
     def setup_capture(self):
-        # capture at location 0
-        self.camera = cv2.VideoCapture(0)
+        """
+        Setups the camera capture.
+        :return: camera
+        :rtype: VideoCapture object
+        """
+        self.camera = cv2.VideoCapture()
         if not self.camera.isOpened():
             sys.stderr.write("Error capturing camera at location 0. Quitting.\n")
             sys.exit(1)
 
         return self.camera
 
-    def debug_text(self, cx, cy, area):
+    @staticmethod
+    def debug_text(cx, cy, area):
+        """
+        Returns the debug text.
+        :param cx: x axis value.
+        :param cy: y axis value.
+        :param area: approximation of laser dot area.
+        :rtype : String describing location and area of laser dot.
+        """
         return "Laser point detected at ({cx},{cy}) with area {area}.".format(cx=cx, cy=cy, area=area)
 
-    # tracking method 1
     def in_laser_color_range(self, frame):
+        """
+        Tracking method 1.
+        :param frame: frame to threshold
+        :return: hsv image, and image within our threshold
+        """
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
         # Normal masking algorithm
@@ -125,8 +155,12 @@ class LaserMote(object):
 
         return hsv, gray
 
-    # tracking method 2
     def get_hsv(self, frame):
+        """
+        Tracking method 2.
+        :param frame: frame to threshold it's hsv values
+        :return: hsv image, and image withing the threshold
+        """
         hsv = cv2.cvtColor(frame, cv2.cv.CV_BGR2HSV)
         hue, sat, val = cv2.split(hsv)
 
@@ -153,6 +187,13 @@ class LaserMote(object):
         return hsv, laser
 
     def display(self, laser, frame):
+        """
+        Finds contour and determines if it's valid laser dot or not through area threshold.
+        Displays debug text and draws a circle on detected laser point.
+        :param laser: image containing only laser dot (i.e image within our threshold)
+        :param frame: frame to display and writing debug text on
+        :return: frame
+        """
         contours, hierarchy = cv2.findContours(
             laser, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
@@ -168,13 +209,15 @@ class LaserMote(object):
                 # if self.debug:
                 #     print "within threshold " + str(area)
 
-                if self.point.was_seen() \
+                if self.point.was_seen \
                         and self.get_distance(cx, cy) <= self.distance_threshold:
 
                     if self.debug:
-                        print '[DEBUG] Distance between last seen point (' + str(self.point.last_seen_x) + "," + str(
-                            self.point.last_seen_y) + ") and current point (" + str(cx) + "," + str(cy) + ") :" + str(
-                            self.get_distance(cx, cy))
+                        print "[DEBUG] Distance between last seen point ({0},{1})" \
+                              " and current point ({2},{3}) :{4}".format(str(self.point.last_seen_x),
+                                                                         str(self.point.last_seen_y),
+                                                                         str(cx), str(cy),
+                                                                         str(self.get_distance(cx, cy)))
 
                     # update last point locations
                     self.point.update_last_seen_position(cx, cy)
@@ -188,11 +231,11 @@ class LaserMote(object):
                         self.debug_text(cx, cy, area), LaserMote.BOTTOM_LEFT_COORD,
                         cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
 
-                elif not self.point.was_seen():
+                elif not self.point.was_seen:
                     self.point.set_on()
                     self.point.update_last_seen_position(cx, cy)
                     if self.debug:
-                        print '[DEBUG] First seen point is at: (' + str(cx) + "," + str(cy) + ")."
+                        print '[DEBUG] First seen point is at: ({0},{1}).'.format(str(cx), str(cy))
                         print '[DEBUG] Updated last seen coordinates.'
 
                 found_valid_point = True
@@ -202,7 +245,7 @@ class LaserMote(object):
             cv2.putText(frame, LaserMote.NOT_FOUND_TEXT,
                         LaserMote.BOTTOM_LEFT_COORD, cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
 
-            if self.point.is_on() and self.point.was_seen():
+            if self.point.is_on and self.point.was_seen:
                 self.point.set_off()
 
         return frame
@@ -215,7 +258,7 @@ class LaserMote(object):
             ret, frame = self.camera.read()
 
             # get frame size
-            w, h = frame.shape[:2]
+            # w, h = frame.shape[:2]
 
             # mirror the frame
             # frame = cv2.flip(frame, 1)
@@ -230,7 +273,7 @@ class LaserMote(object):
 
                 self.blacked = cv2.bitwise_and(frame, frame, mask=mask)
 
-            if self.debug and not (self.blacked is None):
+            if self.debug and (self.blacked is not None):
                 # absDiff = cv2.absdiff(self.background, frame)
                 # print absDiff
                 # kernel = np.ones((1, 1), np.uint8)
@@ -272,7 +315,7 @@ class LaserMote(object):
             # wait for space to save single frame
             # if cv2.waitKey(5) == 32:
             #     singleFrame = frame
-            #     imshow(singleFrame)
+            #     image_show(singleFrame)
 
             # exit on ESC press
             if cv2.waitKey(5) == 27:
