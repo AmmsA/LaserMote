@@ -10,12 +10,12 @@ class Point(Thread):
                  debug=False):
 
         """
-        Initializes all variables
+        Initializes all variables.
 
-        :param reset_time: how long should we wait after we last see the laser dot to  reset laser dot 'seen' to false
-        :param wait_time: how long should we wait to determine if a gesture is detected
-        :param seen: boolean to check if we saw the laser dot 'reset_time' seconds ago
-        :param debug: boolean to determine whether to print debug messages or not
+        :param reset_time: how long should we wait after we last see the laser dot to  reset laser dot 'seen' to false.
+        :param wait_time: how long should we wait to determine if a gesture is detected.
+        :param seen: boolean to check if we saw the laser dot 'reset_time' seconds ago.
+        :param debug: boolean to determine whether to print debug messages or not.
         """
         Thread.__init__(self)
 
@@ -53,10 +53,10 @@ class Point(Thread):
 
     def update_last_seen_position(self, x, y):
         """
-        Updates the last seen coordinates of the laser dot
+        Updates the last seen coordinates of the laser dot.
 
-        :param x: x axis value
-        :param y: y axis value
+        :param x: x axis value.
+        :param y: y axis value.
         :rtype: void
         """
         self.last_seen_x = x
@@ -65,9 +65,9 @@ class Point(Thread):
     @property
     def get_last_seen_coordinates(self):
         """
-        Returns the coordinates of where we last saw the laser dot
+        Returns the coordinates of where we last saw the laser dot.
 
-        :return: coordinates of last seen dot
+        :return: coordinates of last seen dot.
         :rtype : (int,int)
 
         """
@@ -75,7 +75,7 @@ class Point(Thread):
 
     def set_on(self):
         """
-        Sets 'on' to true (i.e our laser is turned detected)
+        Sets 'on' to true (i.e our laser is turned detected).
 
         :rtype : void
         """
@@ -88,7 +88,7 @@ class Point(Thread):
 
     def set_off(self):
         """
-        Sets 'on' to false (i.e our laser is turned not detected)
+        Sets 'on' to false (i.e our laser is turned not detected).
 
         :rtype : void
         """
@@ -102,9 +102,9 @@ class Point(Thread):
     @property
     def was_seen(self):
         """
-        Returns true if laser dot was seen before it was rested (after 'reset_time' seconds)
+        Returns true if laser dot was seen before it was rested (after 'reset_time' seconds).
 
-        :return: seen or not
+        :return: seen or not.
         :rtype: boolean
         """
         return self.seen
@@ -112,7 +112,7 @@ class Point(Thread):
     @property
     def is_on(self):
         """
-        Returns true if laser dot is currently on
+        Returns true if laser dot is currently on.
 
         :return: on or not?
         :rtype: boolean
@@ -122,7 +122,7 @@ class Point(Thread):
     @property
     def is_off(self):
         """
-        Returns true if laser dot is currently off
+        Returns true if laser dot is currently off.
 
         :return: off or not?
         :rtype: boolean

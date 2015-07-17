@@ -8,9 +8,9 @@ import numpy as np
 
 def image_show(img):
     """
-    Shows the image in matplotlib window
+    Shows the image in matplotlib window.
 
-    :param img: image to show
+    :param img: image to show.
     :rtype : void
     """
     plt.axis('off')
@@ -46,21 +46,21 @@ class LaserMote(object):
                  debug=False, ):
 
         """
-        Initializes all needed variables
-        :param min_hue: minimum hue allowed
-        :param max_hue: maximum hue allowed
-        :param min_sat: minimum saturation allowed
-        :param max_sat: maximum saturation allowed
-        :param min_val: minimum value allowed
-        :param max_val: maximum value allowed
-        :param min_area: minimum area of the laser dot to look for
-        :param max_area: maximum area of the laser dot to look for
-        :param reset_time: time threshold to reset the last seen laser dot if not seen
-        :param wait_time: the wait time to execute an action "turn on tv, print something, etc"
-        :param distance_threshold: threshold of the distance between current point location and last seen point location
-        :param tracking_method: which tracking method to use
-        :param debug: boolean to allow/disallow debug printing and extra windows
-        :rtype : LaserMote object
+        Initializes all needed variables.
+        :param min_hue: minimum hue allowed.
+        :param max_hue: maximum hue allowed.
+        :param min_sat: minimum saturation allowed.
+        :param max_sat: maximum saturation allowed.
+        :param min_val: minimum value allowed.
+        :param max_val: maximum value allowed.
+        :param min_area: minimum area of the laser dot to look for.
+        :param max_area: maximum area of the laser dot to look for.
+        :param reset_time: time threshold to reset the last seen laser dot if not seen.
+        :param wait_time: the wait time to execute an action "turn on tv, print something, etc".
+        :param distance_threshold: threshold of the distance between current point location and last seen point location.
+        :param tracking_method: which tracking method to use.
+        :param debug: boolean to allow/disallow debug printing and extra windows.
+        :rtype : LaserMote object.
         """
 
         self.min_hue = min_hue
@@ -99,13 +99,12 @@ class LaserMote(object):
 
         self.tracking_method = tracking_method
 
-    # computes distance between last_seen point (x, y) and the input's (x,y)
     def get_distance(self, x2, y2):
         """
         Calculates the Euclidean distance between the given point (x2,y2) and last seen point.
-        :param x2: x axis value
-        :param y2: y axis value
-        :return: the Euclidean distance between the given point (x2,y2) and last seen point
+        :param x2: x axis value.
+        :param y2: y axis value.
+        :return: the Euclidean distance between the given point (x2,y2) and last seen point.
         :rtype : double
         """
         x1, y1 = self.point.get_last_seen_coordinates
@@ -115,7 +114,7 @@ class LaserMote(object):
     def setup_capture(self):
         """
         Setups the camera capture.
-        :return: camera
+        :return: camera capture.
         :rtype: VideoCapture object
         """
         self.camera = cv2.VideoCapture()
@@ -128,19 +127,19 @@ class LaserMote(object):
     @staticmethod
     def debug_text(cx, cy, area):
         """
-        Returns the debug text.
+        Returns text describing location and area of laser dot.
         :param cx: x axis value.
         :param cy: y axis value.
         :param area: approximation of laser dot area.
-        :rtype : String describing location and area of laser dot.
+        :rtype : String
         """
         return "Laser point detected at ({cx},{cy}) with area {area}.".format(cx=cx, cy=cy, area=area)
 
     def in_laser_color_range(self, frame):
         """
         Tracking method 1.
-        :param frame: frame to threshold
-        :return: hsv image, and image within our threshold
+        :param frame: frame to threshold.
+        :return: hsv image, and image within our threshold.
         """
         hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
 
@@ -158,8 +157,8 @@ class LaserMote(object):
     def get_hsv(self, frame):
         """
         Tracking method 2.
-        :param frame: frame to threshold it's hsv values
-        :return: hsv image, and image withing the threshold
+        :param frame: frame to threshold it's hsv values.
+        :return: hsv image, and image withing the threshold.
         """
         hsv = cv2.cvtColor(frame, cv2.cv.CV_BGR2HSV)
         hue, sat, val = cv2.split(hsv)
@@ -190,9 +189,9 @@ class LaserMote(object):
         """
         Finds contour and determines if it's valid laser dot or not through area threshold.
         Displays debug text and draws a circle on detected laser point.
-        :param laser: image containing only laser dot (i.e image within our threshold)
-        :param frame: frame to display and writing debug text on
-        :return: frame
+        :param laser: image containing only laser dot (i.e image within our threshold).
+        :param frame: frame to display and writing debug text on.
+        :return: frame.
         """
         contours, hierarchy = cv2.findContours(
             laser, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
