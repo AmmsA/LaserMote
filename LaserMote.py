@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import cv2
 import sys
 import math
+import numpy as np
 
 
 def imshow(img):
@@ -21,11 +22,13 @@ def imshow(img):
 class LaserMote(object):
     def __init__(self,
                  debug=False,
-                 min_hue=25, max_hue=180,
+                 min_hue=25, max_hue=179,
                  min_sat=100, max_sat=255,
-                 min_val=170, max_val=255,
-                 min_area=5, max_area=100,
-                 distance_threshold=25):
+                 min_val=200, max_val=255,
+                 min_area=2, max_area=300,
+                 reset_time=None, wait_time=5,
+                 distance_threshold=25,
+                 tracking_method=1):
 
         """
         :param min_hue: minimum hue allowed
@@ -36,7 +39,10 @@ class LaserMote(object):
         :param max_val: maximum value allowed
         :param min_area: minimum area of the laser dot to look for
         :param max_area: maximum area of the laser dot to look for
+        :param reset_time: time threshold to reset the last seen laser dot if not seen
+        :param wait_time: the wait time to execute an action "turn on tv, print something, etc"
         :param distance_threshold: threshold of the distance between current point location and the last seen point location
+        :param tracking_method: which tracking method to use
         :return:
         """
 
@@ -50,6 +56,16 @@ class LaserMote(object):
         self.min_area = min_area
         self.max_area = max_area
 
+        if not reset_time:
+            if tracking_method == 1:
+                self.reset_time = 1.5
+            elif tracking_method == 2:
+                self.reset_time = 2
+        else:
+            self.reset_time = 1
+
+        self.wait_time = wait_time
+
         self.camera = None
 
         self.debug = debug
@@ -57,12 +73,14 @@ class LaserMote(object):
         self.background = None
         self.blacked = None
 
-        self.point = Point()
+        self.point = Point(reset_time=self.reset_time, wait_time=self.wait_time, debug=self.debug)
         self.point.setName('PointThread')
         self.point.daemon = True  # make deamon thread to terminate when main program ends
         self.point.start()
 
         self.distance_threshold = distance_threshold
+
+        self.tracking_method = tracking_method
 
     # computes distance between last_seen point (x, y) and the input's (x,y)
     def get_distance(self, x2, y2):
@@ -79,6 +97,22 @@ class LaserMote(object):
 
         return self.camera
 
+    # tracking method 1
+    def in_laser_color_range(self, frame):
+        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+        # Normal masking algorithm
+        lower_red = np.array([self.min_hue, self.min_sat, self.min_val])
+        upper_red = np.array([self.max_hue, self.max_sat, self.max_val])
+
+        mask = cv2.inRange(hsv, lower_red, upper_red)
+
+        laser = cv2.bitwise_and(frame, frame, mask=mask)
+        gray = cv2.cvtColor(laser, cv2.COLOR_BGR2GRAY)
+
+        return hsv, gray
+
+    # tracking method 2
     def get_hsv(self, frame):
         hsv = cv2.cvtColor(frame, cv2.cv.CV_BGR2HSV)
         hue, sat, val = cv2.split(hsv)
@@ -109,6 +143,7 @@ class LaserMote(object):
         contours, hierarchy = cv2.findContours(
             laser, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
 
+        foundValidPoint = False
         for cnt in contours:
             area = cv2.contourArea(cnt)
             M = cv2.moments(cnt)
@@ -141,7 +176,12 @@ class LaserMote(object):
                     if self.debug:
                         print '[DEBUG] First seen point is at: (' + str(cx) + "," + str(cy) + ")"
                         print '[DEBUG] Updated last seen coordinates'
+
+                foundValidPoint = True
                 break  # only one contour
+
+        if (not foundValidPoint) and self.point.is_on() and self.point.was_seen():
+            self.point.set_off()
 
         return frame
 
@@ -194,8 +234,10 @@ class LaserMote(object):
 
             if not (self.blacked is None):
                 hsv, laser = self.get_hsv(self.blacked)
-            else:
+            elif self.tracking_method == 2:
                 hsv, laser = self.get_hsv(frame)
+            elif self.tracking_method == 1:
+                hsv, laser = self.in_laser_color_range(frame)
 
             res = self.display(laser, frame)
 
@@ -219,5 +261,5 @@ class LaserMote(object):
 
 
 if __name__ == '__main__':
-    LaserMote = LaserMote(min_hue=20, max_hue=160, debug=False)
+    LaserMote = LaserMote(min_hue=154, min_sat=40, min_val=200, debug=True, tracking_method=1, wait_time=5)
     LaserMote.run()
