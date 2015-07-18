@@ -1,4 +1,5 @@
 __author__ = "Mustafa S"
+
 from threading import Thread
 import time
 
@@ -44,7 +45,7 @@ class Point(Thread):
         while True:
             if self.last_found_time is not None:
                 elapsed = (time.time() - self.last_found_time)
-                if elapsed >= self.reset_time and self.seen and self.is_off:
+                if elapsed >= self.reset_time and self.seen and self.is_off():
                     self.seen = False
                     self.found_time = None
                     if self.debug:
@@ -62,7 +63,6 @@ class Point(Thread):
         self.last_seen_x = x
         self.last_seen_y = y
 
-    @property
     def get_last_seen_coordinates(self):
         """
         Returns the coordinates of where we last saw the laser dot.
@@ -99,7 +99,6 @@ class Point(Thread):
             if elapsed >= self.wait_time:
                 print "[DEBUG] Gesture detected. (ON for {0} seconds)".format(str(self.wait_time))
 
-    @property
     def was_seen(self):
         """
         Returns true if laser dot was seen before it was rested (after 'reset_time' seconds).
@@ -109,7 +108,6 @@ class Point(Thread):
         """
         return self.seen
 
-    @property
     def is_on(self):
         """
         Returns true if laser dot is currently on.
@@ -119,7 +117,6 @@ class Point(Thread):
         """
         return self.on
 
-    @property
     def is_off(self):
         """
         Returns true if laser dot is currently off.

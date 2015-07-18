@@ -1,9 +1,15 @@
+from ObjectLocation import ObjectLocation
+
+__author__ = "Mustafa S"
+
 from Point import Point
 import matplotlib.pyplot as plt
 import cv2
 import sys
 import math
 import numpy as np
+import time
+
 
 
 def image_show(img):
@@ -14,10 +20,10 @@ def image_show(img):
     :rtype : void
     """
     plt.axis('off')
-    # RGB images are actually BGR in OpenCV, so convert before displaying
+    # RGB images are actually BGR in OpenCV, so convert before displaying.
     if len(img.shape) == 3:
         plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
-    # otherwise, assume it's gray scale and just display it
+    # otherwise, assume it's gray scale and just display it.
     else:
         plt.imshow(img, 'gray')
 
@@ -43,10 +49,14 @@ class LaserMote(object):
                  reset_time=None, wait_time=5,
                  distance_threshold=25,
                  tracking_method=1,
+                 capture_locations_flag=True,
+                 locations_size=1,
                  debug=False, ):
 
         """
         Initializes all needed variables.
+
+        :param capture_locations_flag: __________________________
         :param min_hue: minimum hue allowed.
         :param max_hue: maximum hue allowed.
         :param min_sat: minimum saturation allowed.
@@ -85,8 +95,18 @@ class LaserMote(object):
 
         self.camera = None
 
+        self.capture_locations_flag = capture_locations_flag
+        if not capture_locations_flag:
+            self.locations_size = 0
+        else:
+            self.locations_size = locations_size
+
+        cv2.namedWindow('result')
+        cv2.setMouseCallback("result", self.capture_locations, 0)
+
         self.debug = debug
 
+        self.result = None
         self.background = None
         self.blacked = None
 
@@ -99,25 +119,70 @@ class LaserMote(object):
 
         self.tracking_method = tracking_method
 
+        self.reference_points = []
+        self.object_locations = []
+
+    def capture_locations(self, event, x, y, flags, params):
+        for i in xrange(self.locations_size):
+            reference_points = self.reference_points
+
+            # record the (x,y) coordinates when the mouse is clicked
+            if event == cv2.EVENT_LBUTTONDOWN:
+                reference_points.append((x, y))
+                print len(reference_points)
+
+            # when left mouse button is released
+            elif event == cv2.EVENT_LBUTTONUP:
+                size = len(reference_points)
+                if size > 0:
+                    # cv2.rectangle(self.result, reference_points[size - 2], (x, y), (0, 255, 0), 2)
+                    o = ObjectLocation(reference_points[size - 1][0],
+                                       reference_points[size - 1][1],
+                                       x,
+                                       y)
+                    self.object_locations.append(o)
+
+    def show_object_locations(self):
+        locations = self.object_locations
+
+        for o in locations:
+            if o.name is None:
+                print 'Enter name of ROI: ',
+                o.name = sys.stdin.readline().strip()
+
+                # name must be supplied
+                if len(o.name) < 1:
+                    print "You haven't supplied a name for this ROI. Please try again"
+                    self.object_locations.remove(o)
+                    continue
+            cv2.rectangle(self.result, (o.x1, o.y1), (o.x2, o.y2), (0, 255, 0), 1)
+            cv2.putText(
+                self.result,
+                o.name, (o.x1, o.y1 - 2),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
+
+
     def get_distance(self, x2, y2):
         """
         Calculates the Euclidean distance between the given point (x2,y2) and last seen point.
+
         :param x2: x axis value.
         :param y2: y axis value.
         :return: the Euclidean distance between the given point (x2,y2) and last seen point.
         :rtype : double
         """
-        x1, y1 = self.point.get_last_seen_coordinates
+        x1, y1 = self.point.get_last_seen_coordinates()
         dist = math.sqrt(math.pow(x2 - x1, 2) + math.pow(y2 - y1, 2))
         return dist
 
     def setup_capture(self):
         """
         Setups the camera capture.
+
         :return: camera capture.
         :rtype: VideoCapture object
         """
-        self.camera = cv2.VideoCapture()
+        self.camera = cv2.VideoCapture(0)
         if not self.camera.isOpened():
             sys.stderr.write("Error capturing camera at location 0. Quitting.\n")
             sys.exit(1)
@@ -125,19 +190,30 @@ class LaserMote(object):
         return self.camera
 
     @staticmethod
-    def debug_text(cx, cy, area):
+    def time_in_h_m_s():
+        return time.strftime('%H:%M:%S')
+
+    def debug_text(self, cx=None, cy=None, area=None, found=False):
         """
-        Returns text describing location and area of laser dot.
+        Returns text describing location and area of laser dot, if found.
+        Otherwise return not found debug text
+
         :param cx: x axis value.
         :param cy: y axis value.
         :param area: approximation of laser dot area.
+        :param found: is dot found or not
         :rtype : String
         """
-        return "Laser point detected at ({cx},{cy}) with area {area}.".format(cx=cx, cy=cy, area=area)
+        if found:
+            return "{time} Laser point detected at ({cx},{cy}) with area {area}." \
+                .format(time=self.time_in_h_m_s(), cx=cx, cy=cy, area=area)
+        else:
+            return "{time} {text}".format(time=self.time_in_h_m_s(), text=LaserMote.NOT_FOUND_TEXT)
 
     def in_laser_color_range(self, frame):
         """
         Tracking method 1.
+
         :param frame: frame to threshold.
         :return: hsv image, and image within our threshold.
         """
@@ -157,6 +233,7 @@ class LaserMote(object):
     def get_hsv(self, frame):
         """
         Tracking method 2.
+
         :param frame: frame to threshold it's hsv values.
         :return: hsv image, and image withing the threshold.
         """
@@ -189,6 +266,7 @@ class LaserMote(object):
         """
         Finds contour and determines if it's valid laser dot or not through area threshold.
         Displays debug text and draws a circle on detected laser point.
+
         :param laser: image containing only laser dot (i.e image within our threshold).
         :param frame: frame to display and writing debug text on.
         :return: frame.
@@ -208,7 +286,7 @@ class LaserMote(object):
                 # if self.debug:
                 #     print "within threshold " + str(area)
 
-                if self.point.was_seen \
+                if self.point.was_seen() \
                         and self.get_distance(cx, cy) <= self.distance_threshold:
 
                     if self.debug:
@@ -222,29 +300,30 @@ class LaserMote(object):
                     self.point.update_last_seen_position(cx, cy)
                     self.point.set_on()
 
-                    # cv2.drawContours(frame, cnt, -1, GREEN, 5) # draws the contour
+                    # cv2.drawContours(frame, cnt, -1, GREEN, 15) # draws the contour
                     cv2.circle(frame, (cx, cy), 1, GREEN, thickness=4, lineType=8, shift=0)  # circle cnt center
 
-                    cv2.putText(
-                        frame,
-                        self.debug_text(cx, cy, area), LaserMote.BOTTOM_LEFT_COORD,
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
-
-                elif not self.point.was_seen:
+                elif not self.point.was_seen():
+                    #cv2.drawContours(frame, cnt, -1, BLUE, 15) # draws the contour
                     self.point.set_on()
                     self.point.update_last_seen_position(cx, cy)
                     if self.debug:
                         print '[DEBUG] First seen point is at: ({0},{1}).'.format(str(cx), str(cy))
                         print '[DEBUG] Updated last seen coordinates.'
 
+                cv2.putText(
+                    frame,
+                    self.debug_text(cx, cy, area, found=True), LaserMote.BOTTOM_LEFT_COORD,
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
+
                 found_valid_point = True
                 break  # only one contour
 
         if not found_valid_point:
-            cv2.putText(frame, LaserMote.NOT_FOUND_TEXT,
+            cv2.putText(frame, self.debug_text(),
                         LaserMote.BOTTOM_LEFT_COORD, cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
 
-            if self.point.is_on and self.point.was_seen:
+            if self.point.is_on() and self.point.was_seen():
                 self.point.set_off()
 
         return frame
@@ -303,13 +382,16 @@ class LaserMote(object):
             elif self.tracking_method == 1:
                 hsv, laser = self.in_laser_color_range(frame)
 
-            res = self.display(laser, frame)
+            self.result = self.display(laser, frame)
+
+            if len(self.object_locations) > 0:
+                self.show_object_locations()
+
+            cv2.imshow('result', self.result)
 
             if self.debug:
                 cv2.imshow('laser', laser)
                 cv2.imshow('hsv', hsv)
-
-            cv2.imshow('result', res)
 
             # wait for space to save single frame
             # if cv2.waitKey(5) == 32:
@@ -325,5 +407,5 @@ class LaserMote(object):
 
 
 if __name__ == '__main__':
-    LaserMote = LaserMote(min_hue=154, min_sat=40, min_val=200, debug=True, tracking_method=1, wait_time=5)
+    LaserMote = LaserMote(min_hue=154, min_sat=40, min_val=200, debug=False, tracking_method=1, wait_time=5)
     LaserMote.run()
