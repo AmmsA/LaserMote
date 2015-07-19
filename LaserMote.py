@@ -123,6 +123,15 @@ class LaserMote(object):
         self.object_locations = []
 
     def capture_locations(self, event, x, y, flags, params):
+        """
+        Captures mouse event for creating the ROIs
+
+        :param event:
+        :param x:
+        :param y:
+        :param flags:
+        :param params:
+        """
         for i in xrange(self.locations_size):
             reference_points = self.reference_points
 
@@ -143,6 +152,12 @@ class LaserMote(object):
                     self.object_locations.append(o)
 
     def show_object_locations(self):
+        """
+        Draws a rectangle around a user specified ROI.
+        Asks the user to enter a name for that ROI.
+        ROI must be provided with a name, otherwise it will be disregarded.
+
+        """
         locations = self.object_locations
 
         for o in locations:
@@ -161,6 +176,52 @@ class LaserMote(object):
                 o.name, (o.x1, o.y1 - 2),
                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
 
+            # coordinates printing
+            # cv2.putText(
+            #     self.result,
+            #     str((o.x1, o.y1)), (o.x1, o.y1),
+            #     cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
+            #
+            # cv2.putText(
+            #     self.result,
+            #     str((o.x2, o.y1)), (o.x2, o.y1),
+            #     cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
+            #
+            # cv2.putText(
+            #     self.result,
+            #     str((o.x2, o.y2)), (o.x2, o.y2),
+            #     cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
+            #
+            # cv2.putText(
+            #     self.result,
+            #     str((o.x1, o.y2)), (o.x1, o.y2),
+            #     cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
+
+    def is_dot_within_rois(self, x, y):
+        """
+
+        :param x:
+        :param y:
+        :return: ObjectLocation object
+        """
+        for o in self.object_locations:
+            bottom_left = (o.x1, o.y1)
+            bottom_right = (o.x2, o.y1)
+            top_right = (o.x2, o.y2)
+            top_left = (o.x1, o.y2)
+
+            if x < bottom_left[0]:
+                continue
+            if x > bottom_right[0]:
+                continue
+            if y < top_right[1]:
+                continue
+            if y > bottom_right[1]:
+                continue
+
+            return o
+
+        return None
 
     def get_distance(self, x2, y2):
         """
@@ -299,14 +360,17 @@ class LaserMote(object):
                     # update last point locations
                     self.point.update_last_seen_position(cx, cy)
                     self.point.set_on()
+                    self.point.current_object = self.is_dot_within_rois(cx, cy)
 
-                    # cv2.drawContours(frame, cnt, -1, GREEN, 15) # draws the contour
+                    cv2.drawContours(frame, cnt, -1, GREEN, 15)  # draws the contour
                     cv2.circle(frame, (cx, cy), 1, GREEN, thickness=4, lineType=8, shift=0)  # circle cnt center
 
                 elif not self.point.was_seen():
-                    #cv2.drawContours(frame, cnt, -1, BLUE, 15) # draws the contour
+                    cv2.drawContours(frame, cnt, -1, BLUE, 15)  # draws the contour
                     self.point.set_on()
                     self.point.update_last_seen_position(cx, cy)
+                    self.point.current_object = self.is_dot_within_rois(cx, cy)
+
                     if self.debug:
                         print '[DEBUG] First seen point is at: ({0},{1}).'.format(str(cx), str(cy))
                         print '[DEBUG] Updated last seen coordinates.'
@@ -324,7 +388,8 @@ class LaserMote(object):
                         LaserMote.BOTTOM_LEFT_COORD, cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
 
             if self.point.is_on() and self.point.was_seen():
-                self.point.set_off()
+                current_object = self.is_dot_within_rois(self.point.last_seen_x, self.point.last_seen_y)
+                self.point.set_off(current_object)
 
         return frame
 
@@ -407,5 +472,5 @@ class LaserMote(object):
 
 
 if __name__ == '__main__':
-    LaserMote = LaserMote(min_hue=154, min_sat=40, min_val=200, debug=False, tracking_method=1, wait_time=5)
+    LaserMote = LaserMote(min_hue=154, min_sat=40, min_val=200, debug=True, tracking_method=1, wait_time=5)
     LaserMote.run()

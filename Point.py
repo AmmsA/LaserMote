@@ -34,6 +34,8 @@ class Point(Thread):
 
         self.debug = debug
 
+        self.current_object = None
+
     def run(self):
         """
         Method to be run in a different thread. Checks if it has been over 'reset_time' since the last
@@ -79,6 +81,7 @@ class Point(Thread):
 
         :rtype : void
         """
+
         if not self.seen:
             self.found_time = time.time()
             self.seen = True
@@ -86,10 +89,11 @@ class Point(Thread):
                 print "[DEBUG] seen is now {0}".format(str(self.seen))
         self.on = True
 
-    def set_off(self):
+    def set_off(self, current_object=None):
         """
         Sets 'on' to false (i.e our laser is turned not detected).
 
+        :param current_object: the object (i.e the ROI) the dot was last seen in.
         :rtype : void
         """
         self.on = False
@@ -97,7 +101,9 @@ class Point(Thread):
         if self.found_time is not None:
             elapsed = (time.time() - self.found_time)
             if elapsed >= self.wait_time:
-                print "[DEBUG] Gesture detected. (ON for {0} seconds)".format(str(self.wait_time))
+                print "[INFO] Gesture detected. (ON for {0} seconds)".format(str(self.wait_time))
+                if self.current_object is not None and self.current_object == current_object:
+                    print "[INFO] Gesture detected on object: {0}".format(str(current_object.name))
 
     def was_seen(self):
         """
