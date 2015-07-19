@@ -1,7 +1,6 @@
-from ObjectLocation import ObjectLocation
-
 __author__ = "Mustafa S"
 
+from ObjectLocation import ObjectLocation
 from Point import Point
 import matplotlib.pyplot as plt
 import cv2
@@ -9,7 +8,6 @@ import sys
 import math
 import numpy as np
 import time
-
 
 
 def image_show(img):
@@ -35,7 +33,7 @@ RED = (0, 0, 255)
 GREEN = (0, 255, 0)
 BLUE = (255, 0, 0)
 WHITE = (255, 255, 255)
-
+BLACK = (0, 0, 0)
 
 class LaserMote(object):
     NOT_FOUND_TEXT = "Laser pointer is not detected."
@@ -51,6 +49,7 @@ class LaserMote(object):
                  tracking_method=1,
                  capture_locations_flag=True,
                  locations_size=1,
+                 write_to_video=False,
                  debug=False, ):
 
         """
@@ -69,6 +68,7 @@ class LaserMote(object):
         :param wait_time: the wait time to execute an action "turn on tv, print something, etc".
         :param distance_threshold: threshold of the distance between current point location and last seen point location.
         :param tracking_method: which tracking method to use.
+        :param write_to_video:
         :param debug: boolean to allow/disallow debug printing and extra windows.
         :rtype : LaserMote object.
         """
@@ -94,6 +94,8 @@ class LaserMote(object):
         self.wait_time = wait_time
 
         self.camera = None
+        self.out = None
+        self.write_to_video = write_to_video
 
         self.capture_locations_flag = capture_locations_flag
         if not capture_locations_flag:
@@ -174,7 +176,7 @@ class LaserMote(object):
             cv2.putText(
                 self.result,
                 o.name, (o.x1, o.y1 - 2),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1)
 
             # coordinates printing
             # cv2.putText(
@@ -236,6 +238,12 @@ class LaserMote(object):
         dist = math.sqrt(math.pow(x2 - x1, 2) + math.pow(y2 - y1, 2))
         return dist
 
+    def setup_video(self):
+        # create VideoWriter object
+        fps = 12
+        self.out = cv2.VideoWriter('RealWorld'
+                                   '.avi', -1, fps, (640, 480), True)
+        print self.out
     def setup_capture(self):
         """
         Setups the camera capture.
@@ -348,7 +356,7 @@ class LaserMote(object):
                 #     print "within threshold " + str(area)
 
                 if self.point.was_seen() \
-                        and self.get_distance(cx, cy) <= self.distance_threshold:
+                        :  # and self.get_distance(cx, cy) <= self.distance_threshold:
 
                     if self.debug:
                         print "[DEBUG] Distance between last seen point ({0},{1})" \
@@ -362,11 +370,11 @@ class LaserMote(object):
                     self.point.set_on()
                     self.point.current_object = self.is_dot_within_rois(cx, cy)
 
-                    cv2.drawContours(frame, cnt, -1, GREEN, 15)  # draws the contour
+                    #cv2.drawContours(frame, cnt, -1, GREEN, 15)  # draws the contour
                     cv2.circle(frame, (cx, cy), 1, GREEN, thickness=4, lineType=8, shift=0)  # circle cnt center
 
                 elif not self.point.was_seen():
-                    cv2.drawContours(frame, cnt, -1, BLUE, 15)  # draws the contour
+                    #cv2.drawContours(frame, cnt, -1, BLUE, 15)  # draws the contour
                     self.point.set_on()
                     self.point.update_last_seen_position(cx, cy)
                     self.point.current_object = self.is_dot_within_rois(cx, cy)
@@ -396,6 +404,8 @@ class LaserMote(object):
     def run(self):
 
         self.setup_capture()
+        if self.write_to_video:
+            self.setup_video()
         while True:
             # get frame
             ret, frame = self.camera.read()
@@ -404,7 +414,7 @@ class LaserMote(object):
             # w, h = frame.shape[:2]
 
             # mirror the frame
-            # frame = cv2.flip(frame, 1)
+            frame = cv2.flip(frame, 1)
 
             mask = None
             # wait for space to be clicked to capture background
@@ -454,6 +464,9 @@ class LaserMote(object):
 
             cv2.imshow('result', self.result)
 
+            if self.write_to_video:
+                self.out.write(self.result)  # writes to video
+
             if self.debug:
                 cv2.imshow('laser', laser)
                 cv2.imshow('hsv', hsv)
@@ -468,9 +481,13 @@ class LaserMote(object):
                 # clean up
                 cv2.destroyAllWindows()
                 self.camera.release()
+                if self.write_to_video:
+                    self.out.release()
+                    self.out = None
                 break
 
 
 if __name__ == '__main__':
-    LaserMote = LaserMote(min_hue=154, min_sat=40, min_val=200, debug=True, tracking_method=1, wait_time=5)
+    LaserMote = LaserMote(min_hue=154, min_sat=40, min_val=200, debug=False, tracking_method=1, wait_time=5,
+                          write_to_video=True)
     LaserMote.run()

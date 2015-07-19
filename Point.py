@@ -2,7 +2,7 @@ __author__ = "Mustafa S"
 
 from threading import Thread
 import time
-
+from Feedback import Feedback
 
 class Point(Thread):
     def __init__(self, reset_time=2,
@@ -18,6 +18,7 @@ class Point(Thread):
         :param seen: boolean to check if we saw the laser dot 'reset_time' seconds ago.
         :param debug: boolean to determine whether to print debug messages or not.
         """
+
         Thread.__init__(self)
 
         self.reset_time = reset_time
@@ -103,6 +104,11 @@ class Point(Thread):
             if elapsed >= self.wait_time:
                 print "[INFO] Gesture detected. (ON for {0} seconds)".format(str(self.wait_time))
                 if self.current_object is not None and self.current_object == current_object:
+                    command = "Gesture detected on object: {0}".format(str(current_object.name))
+                    feedback = Feedback(command)
+                    feedback.setName('FeedbackThread')
+                    feedback.daemon = True  # make deamon thread to terminate when main program ends
+                    feedback.start()
                     print "[INFO] Gesture detected on object: {0}".format(str(current_object.name))
 
     def was_seen(self):
