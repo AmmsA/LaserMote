@@ -56,7 +56,7 @@ class LaserMote(object):
         """
         Initializes all needed variables.
 
-        :param capture_locations_flag: __________________________
+        :param capture_locations_flag: boolean to determine whether or not ROIs should be set or already set
         :param min_hue: minimum hue allowed.
         :param max_hue: maximum hue allowed.
         :param min_sat: minimum saturation allowed.
@@ -69,7 +69,7 @@ class LaserMote(object):
         :param wait_time: the wait time to execute an action "turn on tv, print something, etc".
         :param distance_threshold: threshold of the distance between current point location and last seen point location.
         :param tracking_method: which tracking method to use.
-        :param write_to_video:
+        :param write_to_video: boolean to write to video.
         :param debug: boolean to allow/disallow debug printing and extra windows.
         :rtype : LaserMote object.
         """
@@ -488,36 +488,6 @@ class LaserMote(object):
                 break
 
 
-'''
-:param capture_locations_flag: __________________________
-        :param min_hue: minimum hue allowed.
-        :param max_hue: maximum hue allowed.
-        :param min_sat: minimum saturation allowed.
-        :param max_sat: maximum saturation allowed.
-        :param min_val: minimum value allowed.
-        :param max_val: maximum value allowed.
-        :param min_area: minimum area of the laser dot to look for.
-        :param max_area: maximum area of the laser dot to look for.
-        :param reset_time: time threshold to reset the last seen laser dot if not seen.
-        :param wait_time: the wait time to execute an action "turn on tv, print something, etc".
-        :param distance_threshold: threshold of the distance between current point location and last seen point location.
-        :param tracking_method: which tracking method to use.
-        :param write_to_video:
-        :param debug: boolean to allow/disallow debug printing and extra windows.
-        :rtype : LaserMote object.
-
-        min_hue=25, max_hue=179,
-                 min_sat=100, max_sat=255,
-                 min_val=200, max_val=255,
-                 min_area=2, max_area=300,
-                 reset_time=None, wait_time=5,
-                 distance_threshold=25,
-                 tracking_method=1,
-                 capture_locations_flag=True,
-                 locations_size=1,
-                 write_to_video=False,
-                 debug=False
-'''
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Run LaserMote')
     parser.add_argument('-m', '--min_hue',
