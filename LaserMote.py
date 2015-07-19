@@ -4,6 +4,7 @@ from ObjectLocation import ObjectLocation
 from Point import Point
 import matplotlib.pyplot as plt
 import cv2
+import argparse
 import sys
 import math
 import numpy as np
@@ -40,7 +41,7 @@ class LaserMote(object):
     BOTTOM_LEFT_COORD = (25, 460)
 
     def __init__(self,
-                 min_hue=25, max_hue=179,
+                 min_hue=155, max_hue=179,
                  min_sat=100, max_sat=255,
                  min_val=200, max_val=255,
                  min_area=2, max_area=300,
@@ -487,7 +488,138 @@ class LaserMote(object):
                 break
 
 
+'''
+:param capture_locations_flag: __________________________
+        :param min_hue: minimum hue allowed.
+        :param max_hue: maximum hue allowed.
+        :param min_sat: minimum saturation allowed.
+        :param max_sat: maximum saturation allowed.
+        :param min_val: minimum value allowed.
+        :param max_val: maximum value allowed.
+        :param min_area: minimum area of the laser dot to look for.
+        :param max_area: maximum area of the laser dot to look for.
+        :param reset_time: time threshold to reset the last seen laser dot if not seen.
+        :param wait_time: the wait time to execute an action "turn on tv, print something, etc".
+        :param distance_threshold: threshold of the distance between current point location and last seen point location.
+        :param tracking_method: which tracking method to use.
+        :param write_to_video:
+        :param debug: boolean to allow/disallow debug printing and extra windows.
+        :rtype : LaserMote object.
+
+        min_hue=25, max_hue=179,
+                 min_sat=100, max_sat=255,
+                 min_val=200, max_val=255,
+                 min_area=2, max_area=300,
+                 reset_time=None, wait_time=5,
+                 distance_threshold=25,
+                 tracking_method=1,
+                 capture_locations_flag=True,
+                 locations_size=1,
+                 write_to_video=False,
+                 debug=False
+'''
 if __name__ == '__main__':
-    LaserMote = LaserMote(min_hue=154, min_sat=40, min_val=200, debug=False, tracking_method=1, wait_time=5,
-                          write_to_video=True)
+    parser = argparse.ArgumentParser(description='Run LaserMote')
+    parser.add_argument('-m', '--min_hue',
+                        default=165,
+                        type=int,
+                        help='Minimum Hue'
+                        )
+    parser.add_argument('-M', '--max_hue',
+                        default=179,
+                        type=int,
+                        help='Maximum Hue'
+                        )
+    parser.add_argument('-s', '--min_sat',
+                        default=40,
+                        type=int,
+                        help='Minimum Saturation'
+                        )
+    parser.add_argument('-S', '--max_sat',
+                        default=255,
+                        type=int,
+                        help='Maximum Saturation'
+                        )
+    parser.add_argument('-v', '--min_val',
+                        default=200,
+                        type=int,
+                        help='Minimum Value'
+                        )
+    parser.add_argument('-V', '--max_val',
+                        default=255,
+                        type=int,
+                        help='Maximum Value'
+                        )
+    parser.add_argument('-a', '--min_area',
+                        default=2,
+                        type=int,
+                        help='Minimum area of dot'
+                        )
+    parser.add_argument('-A', '--max_area',
+                        default=300,
+                        type=int,
+                        help='Maximum area of dot'
+                        )
+    parser.add_argument('-r', '--reset_time',
+                        default=0,
+                        type=int,
+                        help='Time threshold to reset the last seen laser dot if not seen.'
+                        )
+    parser.add_argument('-w', '--wait_time',
+                        default=5,
+                        type=int,
+                        help='The wait time to execute an action "turn on tv, print something, etc".'
+                        )
+    parser.add_argument('-d', '--distance_threshold',
+                        default=25,
+                        type=int,
+                        help='Threshold of the distance between current point location and last seen point location.'
+                        )
+    parser.add_argument('-t', '--tracking_method',
+                        default=1,
+                        type=int,
+                        help='Which tracking method to use <1,2>?'
+                        )
+    parser.add_argument('-c', '--capture_locations_flags',
+                        default=True,
+                        type=bool,
+                        help='Are we allowed to set ROIs?'
+                        )
+    parser.add_argument('-l', '--locations_size',
+                        default=1,
+                        type=int,
+                        help='Number of ROIs to be set'
+                        )
+    parser.add_argument('-R', '--write_to_video',
+                        default=False,
+                        type=bool,
+                        help='Set video recording on/off'
+                        )
+    parser.add_argument('-debug', '--debug',
+                        default=False,
+                        type=bool,
+                        help='Show debug messages and windows'
+                        )
+    params = parser.parse_args()
+
+
+    # LaserMote = LaserMote(min_hue=154, min_sat=40, min_val=200, debug=False, tracking_method=1, wait_time=5,
+    #                       write_to_video=True)
+
+    LaserMote = LaserMote(min_hue=params.min_hue,
+                          max_hue=params.max_hue,
+                          min_sat=params.min_sat,
+                          max_sat=params.max_sat,
+                          min_val=params.min_val,
+                          max_val=params.max_val,
+                          min_area=params.min_area,
+                          max_area=params.max_area,
+                          reset_time=params.reset_time,
+                          wait_time=params.wait_time,
+                          distance_threshold=params.distance_threshold,
+                          tracking_method=params.tracking_method,
+                          capture_locations_flag=params.capture_locations_flags,
+                          locations_size=params.locations_size,
+                          write_to_video=params.write_to_video,
+                          debug=params.write_to_video)
     LaserMote.run()
