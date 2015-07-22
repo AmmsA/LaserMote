@@ -242,7 +242,7 @@ class LaserMote(object):
     def setup_video(self):
         # create VideoWriter object
         fps = 12
-        self.out = cv2.VideoWriter('RealWorld'
+        self.out = cv2.VideoWriter('Tracking'
                                    '.avi', -1, fps, (640, 480), True)
         print self.out
     def setup_capture(self):
@@ -566,15 +566,12 @@ if __name__ == '__main__':
                         help='Set video recording on/off'
                         )
     parser.add_argument('-debug', '--debug',
-                        default=False,
+                        default=True,
                         type=bool,
                         help='Show debug messages and windows'
                         )
     params = parser.parse_args()
 
-
-    # LaserMote = LaserMote(min_hue=154, min_sat=40, min_val=200, debug=False, tracking_method=1, wait_time=5,
-    #                       write_to_video=True)
 
     LaserMote = LaserMote(min_hue=params.min_hue,
                           max_hue=params.max_hue,
@@ -591,5 +588,5 @@ if __name__ == '__main__':
                           capture_locations_flag=params.capture_locations_flags,
                           locations_size=params.locations_size,
                           write_to_video=params.write_to_video,
-                          debug=params.write_to_video)
+                          debug=params.debug)
     LaserMote.run()
