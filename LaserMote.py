@@ -36,6 +36,7 @@ BLUE = (255, 0, 0)
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 
+
 class LaserMote(object):
     NOT_FOUND_TEXT = "Laser pointer is not detected."
     BOTTOM_LEFT_COORD = (25, 460)
@@ -245,6 +246,7 @@ class LaserMote(object):
         self.out = cv2.VideoWriter('Tracking'
                                    '.avi', -1, fps, (640, 480), True)
         print self.out
+
     def setup_capture(self):
         """
         Setups the camera capture.
@@ -371,11 +373,11 @@ class LaserMote(object):
                     self.point.set_on()
                     self.point.current_object = self.is_dot_within_rois(cx, cy)
 
-                    #cv2.drawContours(frame, cnt, -1, GREEN, 15)  # draws the contour
+                    # cv2.drawContours(frame, cnt, -1, GREEN, 15)  # draws the contour
                     cv2.circle(frame, (cx, cy), 1, GREEN, thickness=4, lineType=8, shift=0)  # circle cnt center
 
                 elif not self.point.was_seen():
-                    #cv2.drawContours(frame, cnt, -1, BLUE, 15)  # draws the contour
+                    # cv2.drawContours(frame, cnt, -1, BLUE, 15)  # draws the contour
                     self.point.set_on()
                     self.point.update_last_seen_position(cx, cy)
                     self.point.current_object = self.is_dot_within_rois(cx, cy)
@@ -571,7 +573,6 @@ if __name__ == '__main__':
                         help='Show debug messages and windows'
                         )
     params = parser.parse_args()
-
 
     LaserMote = LaserMote(min_hue=params.min_hue,
                           max_hue=params.max_hue,
