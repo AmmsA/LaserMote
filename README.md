@@ -1,11 +1,17 @@
 # ![alt text][Logo]
-___
-
 #### Motivation
 Laser-mote is a system for tracking a laser pointer as an input mechanism for interacting with different network-connected devices. In this system, a processor and a camera is placed to capture the environment in which the user will interact with using a laser pointer. Any area of the environment can be defined by the user as a valid interaction spot. Pointing the laser at these pre-defined areas of the environment can trigger the system to preform different actions.
 
 A user defines the defined ROIs (region of interests) at the setup stage and is reasonable for defining what sort of action is desired when a gesture is recognized within the ROI.
 
+#### Images
+![alt text][DotDetection]
+
+![alt text][Tracking]
+
+![alt text][ROISetUp]
+
+![alt text][DotOnTV]
 
 
 ## License
