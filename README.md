@@ -29,9 +29,8 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 
 
-
-- [Logo]: https://github.com/AmmsA/LaserMote/tree/master/raw/img/LaserMote.png
-- [DotDetection]: https://github.com/AmmsA/LaserMote/tree/master/raw/img/DotDetection.png
-- [DotOnTV]: https://github.com/AmmsA/LaserMote/tree/master/raw/img/DotOnTV.png
-- [ROISetUp]: https://github.com/AmmsA/LaserMote/tree/master/raw/img/ROISetUp.png
-- [Tracking]: https://github.com/AmmsA/LaserMote/tree/master/raw/img/Tracking.gif
+[Logo]: https://raw.githubusercontent.com/AmmsA/LaserMote/master/img/LaserMote.png
+[DotDetection]: https://raw.githubusercontent.com/AmmsA/LaserMote/master/img/DotDetection.png
+[DotOnTV]: https://raw.githubusercontent.com/AmmsA/LaserMote/master/img/DotOnTV.png
+[ROISetUp]:https://raw.githubusercontent.com/AmmsA/LaserMote/master/img/ROISetUp.png
+[Tracking]: https://raw.githubusercontent.com/AmmsA/LaserMote/master/img/Tracking.gif
