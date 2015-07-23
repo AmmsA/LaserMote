@@ -30,8 +30,8 @@ SOFTWARE.
 
 
 
-- [Logo]: https://github.com/AmmsA/LaserMote/tree/master/raw/img/LaserMote.png
-- [DotDetection]: https://github.com/AmmsA/LaserMote/tree/master/raw/img/DotDetection.png
-- [DotOnTV]: https://github.com/AmmsA/LaserMote/tree/master/raw/img/DotOnTV.png
-- [ROISetUp]: https://github.com/AmmsA/LaserMote/tree/master/raw/img/ROISetUp.png
-- [Tracking]: https://github.com/AmmsA/LaserMote/tree/master/raw/img/Tracking.gif
+[Logo]: https://github.com/AmmsA/LaserMote/tree/master/raw/img/LaserMote.png
+[DotDetection]: https://github.com/AmmsA/LaserMote/tree/master/raw/img/DotDetection.png
+[DotOnTV]: https://github.com/AmmsA/LaserMote/tree/master/raw/img/DotOnTV.png
+[ROISetUp]: https://github.com/AmmsA/LaserMote/tree/master/raw/img/ROISetUp.png
+[Tracking]: https://github.com/AmmsA/LaserMote/tree/master/raw/img/Tracking.gif
