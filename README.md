@@ -13,6 +13,9 @@ A user defines the defined ROIs (region of interests) at the setup stage and is 
 
 ![alt text][DotOnTV]
 
+### Video
+
+[![ScreenShot](https://raw.githubusercontent.com/AmmsA/LaserMote/master/img/thumbnail.png)](https://vimeo.com/134686992)
 
 ## License
 
