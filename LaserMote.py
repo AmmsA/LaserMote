@@ -181,46 +181,50 @@ class LaserMote(object):
                 cv2.FONT_HERSHEY_SIMPLEX, 0.5, BLACK, 1)
 
             # coordinates printing
-            # cv2.putText(
-            #     self.result,
-            #     str((o.x1, o.y1)), (o.x1, o.y1),
-            #     cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
-            #
-            # cv2.putText(
-            #     self.result,
-            #     str((o.x2, o.y1)), (o.x2, o.y1),
-            #     cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
-            #
-            # cv2.putText(
-            #     self.result,
-            #     str((o.x2, o.y2)), (o.x2, o.y2),
-            #     cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
-            #
-            # cv2.putText(
-            #     self.result,
-            #     str((o.x1, o.y2)), (o.x1, o.y2),
-            #     cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
+
+            if self.debug:
+                cv2.putText(
+                    self.result,
+                    str((o.x1, o.y1)), (o.x1, o.y1),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
+
+                cv2.putText(
+                    self.result,
+                    str((o.x2, o.y1)), (o.x2, o.y1),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
+
+                cv2.putText(
+                    self.result,
+                    str((o.x2, o.y2)), (o.x2, o.y2),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
+
+                cv2.putText(
+                    self.result,
+                    str((o.x1, o.y2)), (o.x1, o.y2),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, WHITE, 1)
 
     def is_dot_within_rois(self, x, y):
         """
+        Checks if given point is within any of the defined ROIs (rectangle ROIS)
 
-        :param x:
-        :param y:
+        :param x: dot's x axis value
+        :param y: dot's y axis value
         :return: ObjectLocation object
         """
         for o in self.object_locations:
-            bottom_left = (o.x1, o.y1)
-            bottom_right = (o.x2, o.y1)
-            top_right = (o.x2, o.y2)
-            top_left = (o.x1, o.y2)
+            left_x = min(o.x1, o.x2)
+            right_x = max(o.x1, o.x2)
 
-            if x < bottom_left[0]:
+            left_y = min(o.y1, o.y2)
+            right_y = max(o.y1, o.y2)
+
+            if x < left_x:
                 continue
-            if x > bottom_right[0]:
+            if x > right_x:
                 continue
-            if y < top_right[1]:
+            if y < right_y:
                 continue
-            if y > bottom_right[1]:
+            if y > left_y:
                 continue
 
             return o
