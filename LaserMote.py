@@ -215,16 +215,16 @@ class LaserMote(object):
             left_x = min(o.x1, o.x2)
             right_x = max(o.x1, o.x2)
 
-            left_y = min(o.y1, o.y2)
-            right_y = max(o.y1, o.y2)
+            bottom_y = min(o.y1, o.y2)
+            top_y = max(o.y1, o.y2)
 
             if x < left_x:
                 continue
             if x > right_x:
                 continue
-            if y < right_y:
+            if y > top_y:
                 continue
-            if y > left_y:
+            if y < bottom_y:
                 continue
 
             return o
@@ -242,6 +242,7 @@ class LaserMote(object):
         """
         x1, y1 = self.point.get_last_seen_coordinates()
         dist = math.sqrt(math.pow(x2 - x1, 2) + math.pow(y2 - y1, 2))
+        print dist
         return dist
 
     def setup_video(self):
