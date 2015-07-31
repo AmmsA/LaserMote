@@ -573,7 +573,7 @@ if __name__ == '__main__':
                         help='Set video recording on/off'
                         )
     parser.add_argument('-debug', '--debug',
-                        default=True,
+                        default=False,
                         type=bool,
                         help='Show debug messages and windows'
                         )
